@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const userRoutes = require('./Routes/user.routes');
 const app = express();
-
+const connectDB = require('./config/db')
+connectDB();
 // Set EJS as view engine
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -13,7 +14,8 @@ app.use(express.json());
 
 
 app.get('/', (req, res) => {
-    res.send("Hello World - <a href='/user/signup'>Go to Signup</a>");
+    res.send("Hello World - <a href='/user/signup'>Go to Signup</a> or <a href='/user/login'>Go to Login</a>");
+     
 });
 
 // Routes
