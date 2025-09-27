@@ -202,10 +202,6 @@ router.post('/login', loginvalidation, (req, res, next) => {
      res.render('dashboard', { user: req.user });
     })
 
-       
-
-
-
     router.post('/logout', (req, res) => {
         req.session.destroy(err => {
             if (err) {
