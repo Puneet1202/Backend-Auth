@@ -12,14 +12,17 @@ const userSchema = new mongoose.Schema({
     email:{
         type:String,
         required:true,
-        trime : true,
+        trim : true,
         unique:true,
         lowercase:true
     },
     password:{
         type:String,
-        required:true,
+       
         minLength:6
+    },
+    googleId:{
+        type:String,
     },
     role:{
         type:String,

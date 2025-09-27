@@ -8,6 +8,7 @@ const UserModel = require("../models/user.model");
 const sendEmail = require("../utils/SendEmail");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const passport = require('passport')
 // Handle signup form submission
 
 
@@ -16,9 +17,9 @@ const bcrypt = require("bcryptjs");
 // Yeh hamara security guard hai
 const isAuth = (req, res, next) => {
     // Guard check karta hai: "Kya is user ke paas stamp (session) hai?"
-    if (req.session.isLoggedIn) {
+    if (req.isAuthenticated()) {
         // Agar stamp hai, to guard kehta hai "Aage jao"
-        next();
+         return next();
     } else {
         // Agar stamp nahi hai, to guard use wapas login page par bhej deta hai
         res.redirect('/user/login');
@@ -160,53 +161,45 @@ router.post("/signup", signupValidation, async (req, res) => {
   console.log(req.body);
 });
 
-router.post("/login", loginvalidation, async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-    try {
-        const { email, password } = req.body;
+// Routes/user.routes.js
 
-        const user = await UserModel.findOne({ email: email });
+router.post('/login', loginvalidation, (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        // Yeh function LocalStrategy ke 'done' call karne ke baad chalta hai
+
+        // 1. Server mein koi error aa gaya
+        if (err) { 
+            return next(err); 
+        }
+
+        // 2. Agar user nahi mila ya password galat hai
         if (!user) {
-        return res.status(400).send("Is email se koi user registered nahi hai.");
+            // info.message mein woh error hoga jo humne strategy mein set kiya tha
+            // Jaise: "Aapka password galat hai."
+            return res.redirect('/user/login'); 
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (isMatch) {
-        req.session.isLoggedIn = true;
-        req.session.user = {
-            id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-        };
-        const subject = "Login Successful";
-        const htmlMessage = `
-            <h1>Login Successful</h1>
-                <p>You have successfully logged in to your account.</p>
-                <p>If this wasn't you, please reset your password immediately.</p>
-            `;
-        sendEmail(req.body.email, subject, htmlMessage);
-
-        req.session.save((err) => {
-            if (err) {
-            console.log(err);
+        // 3. Agar user mil gaya, toh ab session banao
+        req.logIn(user, (err) => {
+            if (err) { 
+                return next(err); 
             }
-            res.redirect("/user/dashboard");
+            
+            // YAHAN AAP APNI CUSTOM LOGIC LIKH SAKTE HAIN
+            // Session सफलतापूर्वक ban gaya hai! Ab email bhejte hain.
+            const subject = "Login Successful";
+            const htmlMessage = `<h1>Login Successful</h1><p>You have successfully logged in to your account.</p>`;
+            sendEmail(user.email, subject, htmlMessage); // user.email ka use karein
+
+            // Ab dashboard par redirect kar do
+            return res.redirect('/user/dashboard');
         });
-        } else {
-        return res.status(400).send("Aapka password galat hai.");
-        }
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).send("Server Error");
-    }
-    });
+    })(req, res, next);
+});
 
     router.get("/dashboard",isAuth, (req, res) => {
-        const loggedInUser = req.session.user;
-     res.render('dashboard', { user: loggedInUser });
+    
+     res.render('dashboard', { user: req.user });
     })
 
        
@@ -221,6 +214,37 @@ router.post("/login", loginvalidation, async (req, res) => {
             res.redirect('/user/login');
         });
     });
+    // Yeh Route User ko Google ke Login Page par Bhejega
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google is Route par User ko Login ke Baad Waapis Bhejega
+router.get('/google/callback',(req,res,next)=>{
+    passport.authenticate('google', (err, user, info) => {
+      if(err){
+        return next(err);
+      }
+        // 2. Agar Google se authentication fail ho gaya
+        if (!user) {
+            return res.redirect('/user/login');
+        }
+        // 3. Agar user mil gaya, toh ab session banao
+        req.logIn(user, (err) => {
+            if (err) { 
+                return next(err); 
+            }
+
+            // YAHAN HUM EMAIL BHEJENGE!
+            // Session ban gaya hai, ab email bhejte hain.
+            const subject = "Login Successful (via Google)";
+            const htmlMessage = `<h1>Login Successful</h1><p>You have successfully logged into your account using Google.</p>`;
+            sendEmail(user.email, subject, htmlMessage); // user.email ka use karein
+
+            // Ab dashboard par redirect kar do
+            return res.redirect('/user/dashboard');
+        });
+    })(req, res, next);
+})
+
 
 
 module.exports = router; // You can add user-related routes here in the future
