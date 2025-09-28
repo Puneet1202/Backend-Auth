@@ -12,6 +12,7 @@ const User = require('./models/user.model');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const linkRoutes = require('./Routes/link.routes');
+const MongoStore = require('connect-mongo');
 
 // Connect to MongoDB
 
@@ -27,10 +28,14 @@ app.use(express.json());
 
 
 
+// session waale code ko isse replace karein
 app.use(session({
-                secret: process.env.SESSION_SECRET,
-                resave: false,
-                saveUninitialized: false,
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ 
+        mongoUrl: process.env.MONGO_URL 
+    })
 }));
 app.use(flash());
 app.use((req, res, next) => {
