@@ -48,21 +48,23 @@ app.use((req, res, next) => {
 
 app.use(passport.initialize());
 app.use(passport.session());
+//Pehle callback URL ko ek alag, saaf variable mein bana lein
+const googleCallbackURL = process.env.ROOT_URL + '/user/google/callback';
+
+// Ek aur console.log taaki humein pata chale ki aakhir ban kya raha hai
+console.log("Google Strategy ke liye Callback URL banaya jaa raha hai:", googleCallbackURL);
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.ROOT_URL + '/user/google/callback'
+    callbackURL: googleCallbackURL // Ab yahan direct variable use karein
 },
 async (accessToken, refreshToken, profile, done) => {
-        console.log("\nSTEP 1: GOOGLE STRATEGY SHURU HUI"); // <-- LOG 5
-
+    // ... aapka baaki ka logic (ismein koi change nahi) ...
     try {
         let user = await User.findOne({ googleId: profile.id });
         if (user) return done(null, user);
-        console.log("  -> SUCCESS: User Google ID se mil gaya. Login kar rahe hain."); // <-- LOG 6
-
-
+        
         user = await User.findOne({ email: profile.emails[0].value });
         if (user) {
             user.googleId = profile.id;
@@ -78,8 +80,6 @@ async (accessToken, refreshToken, profile, done) => {
         return done(null, newUser);
 
     } catch (error) {
-        console.error("  -> ERROR: Google Strategy mein error aaya:", error); // <-- LOG 7
-
         return done(error, null);
     }
 }));
