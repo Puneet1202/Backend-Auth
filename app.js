@@ -50,7 +50,7 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/user/google/callback"
+    callbackURL: process.env.ROOT_URL + '/user/google/callback'
 },
 async (accessToken, refreshToken, profile, done) => {
         console.log("\nSTEP 1: GOOGLE STRATEGY SHURU HUI"); // <-- LOG 5
