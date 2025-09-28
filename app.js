@@ -4,12 +4,16 @@ const userRoutes = require('./Routes/user.routes');
 const app = express();
 const connectDB = require('./config/db')
 const session = require('express-session');
+const flash = require('connect-flash');
 
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('./models/user.model');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
+const linkRoutes = require('./Routes/link.routes');
+
+// Connect to MongoDB
 
 
 connectDB();
@@ -28,6 +32,12 @@ app.use(session({
                 resave: false,
                 saveUninitialized: false,
 }));
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.successMessage = req.flash('success');
+    res.locals.errorMessage = req.flash('error');
+    next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -128,6 +138,9 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/user', userRoutes);
+app.use('/', linkRoutes);
+
+// Start the server
 
 
 

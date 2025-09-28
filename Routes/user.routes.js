@@ -5,6 +5,7 @@ const { signupValidation } = require("../Auth/Validation");
 const { loginvalidation } = require("../Auth/Validation");
 const { validationResult } = require("express-validator");
 const UserModel = require("../models/user.model");
+const Link = require('../models/link.model');
 const sendEmail = require("../utils/SendEmail");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
@@ -197,9 +198,18 @@ router.post('/login', loginvalidation, (req, res, next) => {
     })(req, res, next);
 });
 
-    router.get("/dashboard",isAuth, (req, res) => {
+    router.get("/dashboard",isAuth, async(req, res) => {
+      try{
+          const userLinks = await Link.find({ owner: req.user._id });
     
-     res.render('dashboard', { user: req.user });
+        res.render('dashboard', { user: req.user , links: userLinks});
+
+      }catch (error) {
+        // Agar database mein koi error aaye, toh crash hone se bachao
+        console.log("Dashboard load karne mein error:", error);
+        res.send("Dashboard load nahi ho paaya, कृपया baad mein try karein.");
+    }
+    
     })
 
     router.post('/logout', (req, res) => {

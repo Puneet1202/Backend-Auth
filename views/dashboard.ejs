@@ -1,15 +1,211 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Dashboard</title>
+    <style>
+        /* General Styles */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; 
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 20px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        
+        /* Form Styles */
+        .form-group {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        input[type="url"] { 
+            flex-grow: 1; /* Input ko jitni jagah mile le lega */
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px 0 0 4px; /* Left corners ko round kiya */
+            border-right: none;
+        }
+        button { 
+            padding: 12px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 0 4px 4px 0; /* Right corners ko round kiya */
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        button.logout {
+             border-radius: 4px; /* Logout button ko poora round kiya */
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+
+        /* Table Styles */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+            word-break: break-all; /* Lambe URLs ko tod dega */
+        }
+        thead { 
+            background-color: #f2f2f2; 
+        }
+        a { 
+            color: #007bff; 
+            text-decoration: none; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+
+        /* Alert Messages */
+        .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* RESPONSIVE STYLES - Mobile ke liye Magic */
+        @media screen and (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .form-group {
+                flex-direction: column; /* Form elements ko upar-neeche kar dega */
+            }
+            input[type="url"] {
+                width: auto; /* Width ko poora le lega */
+                border-radius: 4px;
+                border-right: 1px solid #ccc;
+                margin-bottom: 10px;
+            }
+            button {
+                width: 100%;
+                border-radius: 4px;
+            }
+            
+            /* Table ko card jaisa banana */
+            table, thead, tbody, th, td, tr { 
+                display: block; 
+            }
+            thead tr { 
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr { 
+                border: 1px solid #ccc; 
+                margin-bottom: 15px;
+            }
+            td { 
+                border: none;
+                border-bottom: 1px solid #eee; 
+                position: relative;
+                padding-left: 50%; 
+            }
+            td:before { 
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                width: 45%; 
+                padding-right: 10px; 
+                white-space: nowrap;
+                font-weight: bold;
+                content: attr(data-label); /* Yahan label dikhega */
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome, <%= user.fullName %>!</h1>
+    <div class="container">
 
-    <p>Yeh aapka personal dashboard hai.</p>
+        <% if (successMessage && successMessage.length > 0) { %>
+            <div class="alert alert-success">
+                <%= successMessage %>
+            </div>
+        <% } %>
 
-    <form action="/user/logout" method="POST">
-        <button type="submit">Logout</button>
-    </form>
+        <% if (errorMessage && errorMessage.length > 0) { %>
+            <div class="alert alert-error">
+                <%= errorMessage %>
+            </div>
+        <% } %>
+        
+        <h1>Welcome, <%= user.fullName %>!</h1>
+        <hr>
+
+        <h2>Naya URL Short Karein</h2>
+        <form action="/links" method="POST" class="form-group">
+            <input type="url" name="originalUrl" placeholder="Yahan apna lamba URL paste karein" required>
+            <button type="submit">Shorten</button>
+        </form>
+        <hr>
+
+        <h2>Aapke Shortened Links</h2>
+        
+        <% if (links.length > 0) { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Original URL</th>
+                        <th>Short URL</th>
+                        <th>Clicks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% links.forEach(link => { %>
+                        <tr>
+                            <td data-label="Original URL"><a href="<%= link.originalUrl %>" target="_blank"><%= link.originalUrl.substring(0, 30) %>...</a></td>
+                            <td data-label="Short URL">
+    <a href="/<%= link.shortCode %>" target="_blank">.../<%= link.shortCode %></a>
+    <button onclick="copyToClipboard('http://localhost:8000/<%= link.shortCode %>')">Copy</button>
+</td>
+                            <td data-label="Clicks"><%= link.clicks %></td>
+                            <td data-label="Action">
+                                <form action="/links/<%= link._id %>/delete" method="POST" style="display:inline;">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <p>Aapne abhi tak koi link nahi banaya hai. Upar diye gaye form se shuruaat karein!</p>
+        <% } %>
+
+        <br>
+        <form action="/user/logout" method="POST">
+            <button type="submit" class="logout">Logout</button>
+        </form>
+    </div>
+      <script>
+        function copyToClipboard(text) {
+            // Browser ki built-in clipboard API ka istemal karke text copy karna
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    // Agar copy ho jaaye, toh user ko alert do
+                    alert("Link copied to clipboard!");
+                })
+                .catch(err => {
+                    // Agar koi error aaye, toh console mein dikhao
+                    console.error('Could not copy text: ', err);
+                });
+        }
+    </script>   
 </body>
 </html>
