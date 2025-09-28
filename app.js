@@ -1,4 +1,6 @@
 require('dotenv').config();
+console.log("Render par mera ROOT_URL hai:", process.env.ROOT_URL);
+
 const express = require('express');
 const userRoutes = require('./Routes/user.routes');
 const app = express();
