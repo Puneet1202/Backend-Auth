@@ -139,17 +139,23 @@ router.post("/forgot-password", async (req, res) => {
 
 // Correct path should be '/signup' (since this router is mounted at '/user')
 router.post("/signup", signupValidation, async (req, res) => {
+      console.log("LOG: Signup route hit."); // <-- LOG 1
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
   const { fullName, email, password } = req.body;
+          console.log("LOG: Database mein user create kar raha hoon..."); // <-- LOG 2
+
   await UserModel.create({
     fullName: fullName,
     email: email,
     password: password,
   });
+          console.log("LOG: User create ho gaya. Ab email bhej raha hoon..."); // <-- LOG 3
+
   const subject = "Welcome to Auth App";
   const htmlMessage = `
            <h1>Welcome to Auth App</h1>
@@ -157,6 +163,8 @@ router.post("/signup", signupValidation, async (req, res) => {
             <p>We're excited to have you on board!</p>
         `;
   await sendEmail(email, subject, htmlMessage);
+          console.log("LOG: Email safaltapoorvak chala gaya."); // <-- LOG 4
+
   res.send("User registered successfully! Please check your email.");
 
   console.log(req.body);
