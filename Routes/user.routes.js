@@ -156,14 +156,14 @@ router.post("/signup", signupValidation, async (req, res) => {
   });
           console.log("LOG: User create ho gaya. Ab email bhej raha hoon..."); // <-- LOG 3
 
-  const subject = "Welcome to Auth App";
-  const htmlMessage = `
-           <h1>Welcome to Auth App</h1>
-            <p>Thank you for registering with us.</p>
-            <p>We're excited to have you on board!</p>
-        `;
-  await sendEmail(email, subject, htmlMessage);
-          console.log("LOG: Email safaltapoorvak chala gaya."); // <-- LOG 4
+  // const subject = "Welcome to Auth App";
+  // const htmlMessage = `
+  //          <h1>Welcome to Auth App</h1>
+  //           <p>Thank you for registering with us.</p>
+  //           <p>We're excited to have you on board!</p>
+  //       `;
+  // await sendEmail(email, subject, htmlMessage);
+  //         console.log("LOG: Email safaltapoorvak chala gaya."); // <-- LOG 4
 
   res.send("User registered successfully! Please check your email.");
 
